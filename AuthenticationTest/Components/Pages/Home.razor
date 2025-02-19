@@ -1,0 +1,141 @@
+﻿@page "/"
+
+@using Microsoft.AspNetCore.Authorization
+@using System.Xml
+@using System.Text.Json
+@rendermode InteractiveServer
+
+<AuthorizeView>
+    <Authorized>
+        <div style="text-align:center;">
+            <h1>Find Steam User</h1>
+        </div>
+        <div class="container" style="width:200px">
+            <InputText @bind-Value="steamID" class="form-control" placeholder="Put Steam ID here"/>
+            <div style="margin-top:5px">
+                <button @onclick="FetchSteamProfile" class="w-100 btn btn-lg btn-primary">Search</button>
+            </div>
+        </div>
+        <div class="container" style="width:600px; height:500px; margin-top:15px">
+            <div class="row">
+                <div class="col align-self-start" style="background-color:#171a21; height:500px">
+                    <div class="row" style="background-color:#171a21; height:120px; width:300px; outline:solid">
+                        <h2>Name:</h2>
+                        <h1>@name</h1>
+                    </div>
+                    <div class="row align-bottom" style="background-color:#171a21; height:380px; width:300px; outline:solid">
+                        <h2>Recently played:</h2>
+                        @foreach (var item in playedGames)
+                        {
+                            <li style="font-size:large">@item</li>
+                        }
+                    </div>
+                </div>
+                <div class="col align-self-end" style="background-color:#171a21; height:500px">
+                    <div class="row" style="background-color:#171a21; height:120px; width:300px; outline:solid">
+                        <h2>Steam level:</h2>
+                    </div>
+                    <div class="row align-bottom" style="background-color:#171a21; height:100px; width:300px; outline:solid">
+                        <h2>Game amount:</h2>
+                        <h1>@ownedGames</h1>
+                    </div>
+                    <div class="row align-bottom" style="background-color:#171a21; height:280px; width:300px; outline:solid">
+                        <h2>Friends list:</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <h3>You are not authorized to view this content</h3>
+        <a style="color:aliceblue; font-size:large" href="Account/Login">Login here</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string steamID { get; set; }
+
+    private string name { get; set; } // User personaname
+
+    private string steamLvl { get; set; }
+
+    private string friendList { get; set; }
+
+    private string recentlyPlayedGames { get; set;}
+
+    private string ownedGames { get; set; }
+
+    //----------------------------------------------------------
+
+    List<string> playedGames = new List<string>();
+
+    private async Task FetchSteamProfile()
+    {
+        try
+        {
+            string playerSummaryUrl = $"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=BD7CCBC44C8A96236CDD13B0F96AD826&steamids={steamID}&format=xml";
+
+            using (var client = new HttpClient())
+            {
+                string responseText = await client.GetStringAsync(playerSummaryUrl);
+
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(responseText);
+
+                XmlNodeList nodeList = xmlDoc.SelectNodes("//response/players/player");
+
+                foreach (XmlNode node in nodeList)
+                {
+                    string personaName = node.SelectSingleNode("personaname").InnerText;
+
+                    name = personaName;
+                }
+
+            }
+
+            string recentlyPlayedUrl = $"http://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v0001/?key=BD7CCBC44C8A96236CDD13B0F96AD826&steamid={steamID}&format=xml";
+
+            using (var client = new HttpClient())
+            {
+                string responseText = await client.GetStringAsync(recentlyPlayedUrl);
+
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(responseText);
+
+                XmlNodeList nodeList = xmlDoc.SelectNodes("//response/games/message");
+
+                foreach (XmlNode node in nodeList)
+                {
+                    string games = node.SelectSingleNode("name").InnerText;
+
+                    playedGames.Add(games);
+                }
+            }
+
+            string OwnedGamesUrl = $"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=BD7CCBC44C8A96236CDD13B0F96AD826&steamid={steamID}&format=xml";
+
+            using (var client = new HttpClient())
+            {
+                string responseText = await client.GetStringAsync(OwnedGamesUrl);
+
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(responseText);
+
+                XmlNodeList nodeList = xmlDoc.SelectNodes("//response");
+
+                foreach (XmlNode node in nodeList)
+                {
+                    string gameCount = node.SelectSingleNode("game_count").InnerText;
+
+                    ownedGames = gameCount;
+
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error has occured: {ex}");
+        }
+
+    }
+}
