@@ -1,3 +1,4 @@
+using AuthenticationTest;
 using AuthenticationTest.Components;
 using AuthenticationTest.Components.Account;
 using AuthenticationTest.Data;
@@ -16,6 +17,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddSingleton<SelfDestructingLinkService>();
 builder.Services.AddMudServices();
 
 builder.Services.AddAuthentication(options =>

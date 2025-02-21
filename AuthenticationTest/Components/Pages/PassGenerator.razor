@@ -1,14 +1,52 @@
 ﻿@page "/passgenerator"
 @rendermode InteractiveServer
+@using System;
+@using System.Security.Cryptography;
+@using System.Text;
 
+<AuthorizeView>
+    <Authorized>
+        <h3>Generate random password</h3>
 
-<h3>PassGenerator</h3>
+        <MudButton @onclick="Main">Click me!</MudButton>
+    </Authorized>
+    <NotAuthorized>
+        <h1>You are not authorized</h1>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
 
-    private async Task PassGen ()
+    static void Main()
     {
-        
+        int length = 12; // Set password length
+        string password = PassGen(length); // Gets return data from function
+        Console.WriteLine("Generated Password: " + password);
+    }
+
+    static string PassGen(int length)
+    {
+        // String array of characters to be used in the password generated
+        const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+";
+
+        // Mutable string type for appending generated password
+        StringBuilder result = new StringBuilder();
+
+        // Service for random number generation
+        using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+        {
+            byte[] randomBytes = new byte[length]; // Byter array with "length" as size
+            rng.GetBytes(randomBytes); // Fills "randomBytes" with random values
+
+            // Increment with the value of "length"
+            for (int i = 0; i < length; i++)
+            {   
+                // Appends password to "result" 
+                result.Append(validChars[randomBytes[i] % validChars.Length]);
+            }
+        }
+        // Return the result as a string value
+        return result.ToString();
     }
 
 

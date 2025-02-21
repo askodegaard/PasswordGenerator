@@ -1,0 +1,20 @@
+﻿@page "/selfdestruct/{token}"
+@inject SelfDestructingLinkService LinkService
+@code {
+    [Parameter] public string Token { get; set; }
+    private string? content;
+
+    protected override void OnInitialized()
+    {
+        content = LinkService.GetAndDestroyLink(Token);
+    }
+}
+@if (content != null)
+{
+    <h3>Success! Here is your content:</h3>
+    <p>@content</p>
+}
+else
+{
+    <h3>Invalid or Expired Link</h3>
+}

@@ -1,0 +1,18 @@
+﻿@page "/generate-link"
+@inject SelfDestructingLinkService LinkService
+@rendermode InteractiveServer
+
+@if (!string.IsNullOrEmpty(selfDestructLink))
+{
+    <p>Your self-destructing link: <a href="@selfDestructLink">@selfDestructLink</a></p>
+}
+
+@code {
+    private string? selfDestructLink;
+
+    void GenLink()
+    {
+        selfDestructLink = LinkService.CreateLink("Secret Data");
+    }
+}
+<button @onclick="GenLink">Create Self-Destructing Link</button>
